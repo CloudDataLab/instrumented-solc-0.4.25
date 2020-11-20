@@ -394,11 +394,13 @@ map<u256, u256> Assembly::optimiseInternal(
 			JumpdestRemover::referencedTags(m_items, subId)
 		);
 		// Apply the replacements (can be empty).
+        std::vector<cfg::OptimizedAnnotation> tmp;
 		BlockDeduplicator::applyTagReplacement(m_items, subTagReplacements, subId);
 	}
 
 	map<u256, u256> tagReplacements;
-	// Iterate until no new optimisation possibilities are found.
+    copy(m_items.begin(), m_items.end(), back_inserter(source_items));
+    // Iterate until no new optimisation possibilities are found.
 	for (unsigned count = 1; count > 0;)
 	{
 		count = 0;
@@ -406,8 +408,11 @@ map<u256, u256> Assembly::optimiseInternal(
 		if (_settings.runJumpdestRemover)
 		{
 			JumpdestRemover jumpdestOpt(m_items);
-			if (jumpdestOpt.optimise(_tagsReferencedFromOutside))
-				count++;
+			if (jumpdestOpt.optimise(_tagsReferencedFromOutside)) {
+                std::vector<cfg::OptimizedAnnotation> jumpdest_opt_annotation = jumpdestOpt.getMOptimizedAnnotations();
+                m_optimizedAnnotations.push_back(jumpdest_opt_annotation);
+                count++;
+            }
 		}
 
 		if (_settings.runPeephole)
@@ -415,7 +420,9 @@ map<u256, u256> Assembly::optimiseInternal(
 			PeepholeOptimiser peepOpt(m_items);
 			while (peepOpt.optimise())
 			{
-				count++;
+                std::vector<cfg::OptimizedAnnotation> peep_opt_annotation = peepOpt.getMOptimizedAnnotations();
+                m_optimizedAnnotations.push_back(peep_opt_annotation);
+                count++;
 				assertThrow(count < 64000, OptimizerException, "Peephole optimizer seems to be stuck.");
 			}
 		}
@@ -426,7 +433,9 @@ map<u256, u256> Assembly::optimiseInternal(
 			BlockDeduplicator dedup(m_items);
 			if (dedup.deduplicate())
 			{
-				tagReplacements.insert(dedup.replacedTags().begin(), dedup.replacedTags().end());
+                std::vector<std::vector<cfg::OptimizedAnnotation>> dedup_opt_annotation = dedup.getMOptimizedAnnotations();
+                m_optimizedAnnotations.insert(m_optimizedAnnotations.end(), dedup_opt_annotation.begin(), dedup_opt_annotation.end());
+                tagReplacements.insert(dedup.replacedTags().begin(), dedup.replacedTags().end());
 				count++;
 			}
 		}
@@ -437,8 +446,8 @@ map<u256, u256> Assembly::optimiseInternal(
 			// assumes we only jump to tags that are pushed. This is not the case anymore with
 			// function types that can be stored in storage.
 			AssemblyItems optimisedItems;
-
-			bool usesMSize = (find(m_items.begin(), m_items.end(), AssemblyItem(Instruction::MSIZE)) != m_items.end());
+            std::vector<cfg::OptimizedAnnotation> cse_opt_annotation;
+            bool usesMSize = (find(m_items.begin(), m_items.end(), AssemblyItem(Instruction::MSIZE)) != m_items.end());
 
 			auto iter = m_items.begin();
 			while (iter != m_items.end())
@@ -467,29 +476,40 @@ map<u256, u256> Assembly::optimiseInternal(
 
 				if (shouldReplace)
 				{
-					count++;
-					optimisedItems += optimisedChunk;
-				}
+                    count++;
+                    AssemblyItems tmp;
+                    copy(optimisedChunk.begin(), optimisedChunk.end(), back_inserter(tmp));
+                    cfg::OptimzedItem optimzedItem = cfg::OptimzedItem(orig-m_items.begin(), iter-m_items.begin()-1, tmp);
+                    cfg::OptimizedAnnotation optimizedAnnotation = cfg::OptimizedAnnotation(3, "replace", optimzedItem);
+                    cse_opt_annotation.push_back(optimizedAnnotation);
+                    optimisedItems += optimisedChunk;
+                }
 				else
 					copy(orig, iter, back_inserter(optimisedItems));
 			}
 			if (optimisedItems.size() < m_items.size())
 			{
 				m_items = move(optimisedItems);
-				count++;
+                m_optimizedAnnotations.push_back(cse_opt_annotation);
+                count++;
 			}
 		}
 	}
 
-	if (_settings.runConstantOptimiser)
-		ConstantOptimisationMethod::optimiseConstants(
-			_settings.isCreation,
-			_settings.isCreation ? 1 : _settings.expectedExecutionsPerDeployment,
-			_settings.evmVersion,
-			*this,
-			m_items
-		);
-
+    if (_settings.runConstantOptimiser) {
+        std::vector<cfg::OptimizedAnnotation> constantopt;
+        ConstantOptimisationMethod::optimiseConstants(
+                _settings.isCreation,
+                _settings.isCreation ? 1 : _settings.expectedExecutionsPerDeployment,
+                _settings.evmVersion,
+                *this,
+                m_items,
+                constantopt
+        );
+        if(constantopt.size() > 0){
+            m_optimizedAnnotations.push_back(constantopt);
+        }
+    }
 	return tagReplacements;
 }
 
@@ -670,4 +690,47 @@ LinkerObject const& Assembly::assemble() const
 		toBigEndian(ret.bytecode.size(), r);
 	}
 	return ret;
+}
+
+const cfg::Annotation &Assembly::getMAnnotation() const {
+    return m_annotation;
+}
+
+const vector<std::vector<cfg::OptimizedAnnotation>> &Assembly::getMOptimizedAnnotations() const {
+    return m_optimizedAnnotations;
+}
+
+const AssemblyItems &Assembly::getSourceItems() const {
+    return source_items;
+}
+
+std::string Assembly::AnnotationString() const {
+    std::string str = "";
+    str += "====\n";
+    for(auto iter = source_items.begin(); iter != source_items.end(); iter++){
+        str += iter->toAssemblyText() + "\n";
+    }
+    str += "====\n";
+    str += m_annotation.printFunctionEntry();
+    str += "====\n";
+    str += m_annotation.printPublicFunctionEntry();
+    str += "====\n";
+    str += m_annotation.printFallBack();
+    str += "====\n";
+    str += m_annotation.printJumpTgt();
+    str += "====\n";
+    auto iter1 = m_optimizedAnnotations.begin();
+    for(; iter1!=m_optimizedAnnotations.end();iter1++){
+        str += "===\n";
+        auto iter2 = iter1->begin();
+        for(;iter2!=iter1->end();iter2++){
+            str += "==\n";
+            str += iter2->OptimizedAnnotationStr();
+        }
+    }
+    str += "====\n";
+    for(auto iter = m_items.begin(); iter != m_items.end(); iter++){
+        str += iter->toAssemblyText() + "\n";
+    }
+    return str;
 }

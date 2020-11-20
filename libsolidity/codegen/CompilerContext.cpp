@@ -64,7 +64,10 @@ void CompilerContext::addStateVariable(
 void CompilerContext::startFunction(Declaration const& _function)
 {
 	m_functionCompilationQueue.startFunction(_function);
-	*this << functionEntryLabel(_function);
+    eth::AssemblyItem function_entry = functionEntryLabel(_function);
+    *this << function_entry;
+    if(!_function.name().empty() && !_function.isPublic())
+        m_asm->appendFunctionEntryAnnotation(function_entry);
 }
 
 void CompilerContext::callLowLevelFunction(
@@ -80,6 +83,7 @@ void CompilerContext::callLowLevelFunction(
 	*this << lowLevelFunctionTag(_name, _inArgs, _outArgs, _generator);
 
 	appendJump(eth::AssemblyItem::JumpType::IntoFunction);
+    m_asm->appendJumpRetTarget(retTag.data());
 	adjustStackOffset(int(_outArgs) - 1 - _inArgs);
 	*this << retTag.tag();
 }

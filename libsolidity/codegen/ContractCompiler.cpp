@@ -315,6 +315,7 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 	m_context.appendJumpTo(notFound);
 
 	m_context << notFound;
+    m_context.setFallBack(notFound);
 	if (fallback)
 	{
 		solAssert(!_contract.isLibrary(), "");
@@ -361,7 +362,8 @@ void ContractCompiler::appendFunctionSelector(ContractDefinition const& _contrac
 			CompilerUtils(m_context).abiDecode(functionType->parameterTypes());
 		}
 		m_context.appendJumpTo(m_context.functionEntryLabel(functionType->declaration()));
-		m_context << returnTag;
+        m_context.appendPublicEntry(callDataUnpackerEntryPoints.at(it.first) ,m_context.functionEntryLabel(functionType->declaration()));
+        m_context << returnTag;
 		// Return tag and input parameters get consumed.
 		m_context.adjustStackOffset(
 			CompilerUtils(m_context).sizeOnStack(functionType->returnParameterTypes()) -
