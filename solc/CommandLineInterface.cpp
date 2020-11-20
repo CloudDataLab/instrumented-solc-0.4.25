@@ -403,15 +403,15 @@ void CommandLineInterface::handleGasEstimation(string const& _contract)
 	}
 }
 
-void CommandLineInterface::handleCFGAnnotation(std::string const &_contract)
+void CommandLineInterface::handleAnnotation(std::string const &_contract)
 {
         if (!m_args.count(g_argAnnotation))
             return;
-        string data = m_compiler->cfgAnnotation(_contract);
+        string data = m_compiler->annotation(_contract);
         if (m_args.count(g_argOutputDir))
-            createFile(m_compiler->filesystemFriendlyName(_contract) + ".cfg_annotation", data);
+            createFile(m_compiler->filesystemFriendlyName(_contract) + ".annotation", data);
         else
-            cout << "Contract CFG Annotation " << endl << data << endl;
+            cout << "Contract Annotation " << endl << data << endl;
 }
 
 bool CommandLineInterface::readInputFilesAndConfigureRemappings()

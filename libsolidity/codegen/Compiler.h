@@ -81,7 +81,7 @@ public:
 	/// UndefinedItem if it does not exist yet.
 	eth::AssemblyItem functionEntryLabel(FunctionDefinition const& _function) const;
 
-    std::string runtimeCFGAnnotation() const
+    std::string runtimeAnnotation() const
     {
         return m_context.assembly().sub(m_runtimeSub).AnnotationString();
     }

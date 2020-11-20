@@ -70,7 +70,7 @@ private:
 	void handleNatspec(bool _natspecDev, std::string const& _contract);
 	void handleGasEstimation(std::string const& _contract);
 	void handleFormal();
-    void handleCFGAnnotation(std::string const& _contract);
+    void handleAnnotation(std::string const& _contract);
 
 	/// Fills @a m_sourceCodes initially and @a m_redirects.
 	bool readInputFilesAndConfigureRemappings();
