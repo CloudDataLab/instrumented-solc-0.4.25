@@ -395,7 +395,7 @@ map<u256, u256> Assembly::optimiseInternal(
 		);
 		// Apply the replacements (can be empty).
         std::vector<cfg::OptimizedAnnotation> tmp;
-		BlockDeduplicator::applyTagReplacement(m_items, subTagReplacements, subId);
+		BlockDeduplicator::applyTagReplacement(m_items, subTagReplacements, tmp, subId);
 	}
 
 	map<u256, u256> tagReplacements;
