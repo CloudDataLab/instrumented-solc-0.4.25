@@ -239,7 +239,7 @@ public:
 	/// @returns a JSON representing the estimated gas usage for contract creation, internal and external functions
 	Json::Value gasEstimates(std::string const& _contractName) const;
 
-    std::string cfgAnnotation(std::string const& _contractName) const;
+    std::string annotation(std::string const& _contractName) const;
 
 private:
 	/**
