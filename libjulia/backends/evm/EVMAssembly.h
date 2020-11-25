@@ -61,6 +61,7 @@ public:
 	/// Append a jump instruction.
 	/// @param _stackDiffAfter the stack adjustment after this instruction.
 	virtual void appendJump(int _stackDiffAfter) override;
+    virtual void appendJumpOut(int _stackDiffAfter) override;
 	/// Append a jump-to-immediate operation.
 	virtual void appendJumpTo(LabelID _labelId, int _stackDiffAfter) override;
 	/// Append a jump-to-if-immediate operation.

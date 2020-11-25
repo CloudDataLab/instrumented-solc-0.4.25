@@ -98,6 +98,13 @@ public:
         m_assembly.appendJumpTarget(jumpTag_index);
 		m_assembly.adjustDeposit(_stackDiffAfter);
 	}
+	virtual void appendJumpOut(int _stackDiffAfter) override
+    {
+        eth::AssemblyItem item(solidity::Instruction::JUMP);
+        item.setJumpType(eth::AssemblyItem::JumpType::OutOfFunction);
+        m_assembly.append(item);
+        m_assembly.adjustDeposit(_stackDiffAfter);
+    }
 	virtual void appendJumpTo(LabelID _labelId, int _stackDiffAfter) override
 	{
 		appendLabelReference(_labelId);

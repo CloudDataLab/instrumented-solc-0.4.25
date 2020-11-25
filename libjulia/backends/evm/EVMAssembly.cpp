@@ -97,6 +97,11 @@ void EVMAssembly::appendJump(int _stackDiffAfter)
 	m_stackHeight += _stackDiffAfter;
 }
 
+void EVMAssembly::appendJumpOut(int _stackDiffAfter)
+{
+    appendJump(_stackDiffAfter);
+}
+
 void EVMAssembly::appendJumpTo(LabelID _labelId, int _stackDiffAfter)
 {
 	if (m_evm15)
