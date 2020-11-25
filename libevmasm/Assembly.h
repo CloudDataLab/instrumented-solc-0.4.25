@@ -159,14 +159,14 @@ public:
         m_annotation.appendJumptarget(m_items.size()-1, tag.data());
     }
     void appendJumpTarget(unsigned index) {
-        if (m_items.at(index).type() != PushTag)
-            int a = 111;
         assertThrow(m_items.at(index).type() == PushTag, Exception, "");
         AssemblyItem tag = m_items.at(index);
         m_annotation.appendJumptarget(m_items.size()-1, tag.data());
     }
     void appendJumpTarget(unsigned jump_index, unsigned tag_index) {
-        assertThrow(m_items.at(tag_index).type() == PushTag, Exception, "");
+        if (m_items.at(tag_index).type() != Tag)
+            int a = 11;
+        assertThrow(m_items.at(tag_index).type() == Tag, Exception, "");
         AssemblyItem tag = m_items.at(tag_index);
         m_annotation.appendJumptarget(jump_index, tag.data());
     }
