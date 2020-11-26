@@ -64,6 +64,9 @@ public:
 	virtual void appendInstruction(solidity::Instruction _instruction) override
 	{
 		m_assembly.append(_instruction);
+        if (_instruction == solidity::Instruction::JUMP || _instruction == solidity::Instruction::JUMPI){
+            m_assembly.appendJumpTarget(m_assembly.items().size()-2);
+        }
 	}
 	virtual void appendConstant(u256 const& _constant) override
 	{
