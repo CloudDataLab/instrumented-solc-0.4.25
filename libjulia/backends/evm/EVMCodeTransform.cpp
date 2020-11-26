@@ -122,7 +122,7 @@ void CodeTransform::operator()(FunctionCall const& _call)
 		m_assembly.appendJumpsub(functionEntryID(_call.functionName.name, *function), function->arguments.size(), function->returns.size());
 	else
 	{
-		m_assembly.appendJumpTo(functionEntryID(_call.functionName.name, *function), function->returns.size() - function->arguments.size() - 1);
+		m_assembly.appendJumpInTo(functionEntryID(_call.functionName.name, *function), returnLabel, function->returns.size() - function->arguments.size() - 1);
 		m_assembly.appendLabel(returnLabel);
 		m_stackAdjustment--;
 	}
@@ -317,6 +317,8 @@ void CodeTransform::operator()(FunctionDefinition const& _function)
 	{
 		m_assembly.appendJumpTo(afterFunction, -stackHeightBefore + height);
 		m_assembly.appendLabel(functionEntryID(_function.name, function));
+		m_assembly.appendFunctionEntry();
+
 	}
 	m_stackAdjustment += localStackAdjustment;
 

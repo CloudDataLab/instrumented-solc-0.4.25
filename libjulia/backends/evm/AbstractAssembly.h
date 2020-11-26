@@ -82,6 +82,7 @@ public:
 	/// Append a jump-to-immediate operation.
 	/// @param _stackDiffAfter the stack adjustment after this instruction.
 	virtual void appendJumpTo(LabelID _labelId, int _stackDiffAfter = 0) = 0;
+    virtual void appendJumpInTo(LabelID _labelId, LabelID _retLabelId, int _stackDiffAfter = 0) = 0;
 	/// Append a jump-to-if-immediate operation.
 	virtual void appendJumpToIf(LabelID _labelId) = 0;
 	/// Start a subroutine identified by @a _labelId that takes @a _arguments
@@ -93,6 +94,8 @@ public:
 	/// Return from a subroutine.
 	/// @param _stackDiffAfter the stack adjustment after this instruction.
 	virtual void appendReturnsub(int _returns, int _stackDiffAfter = 0) = 0;
+
+	virtual void appendFunctionEntry() = 0;
 
 	/// Append the assembled size as a constant.
 	virtual void appendAssemblySize() = 0;

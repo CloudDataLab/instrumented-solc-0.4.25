@@ -25,6 +25,7 @@
 #include <libevmasm/LinkerObject.h>
 
 #include <map>
+#include <libevmasm/AssemblyItem.h>
 
 namespace dev
 {
@@ -76,6 +77,8 @@ public:
 	/// Append the assembled size as a constant.
 	virtual void appendAssemblySize() override;
 
+	virtual void appendFunctionEntry() override {}
+    virtual void appendJumpInTo(LabelID _labelId, LabelID _retLabelId, int _stackDiffAfter = 0) override {appendJumpTo(_labelId, _stackDiffAfter);}
 	/// Resolves references inside the bytecode and returns the linker object.
 	eth::LinkerObject finalize();
 

@@ -77,6 +77,19 @@ public:
 	{
 		m_assembly.append(eth::AssemblyItem(eth::Tag, _labelId));
 	}
+    virtual void appendFunctionEntry() override {
+	    m_assembly.appendFunctionEntryAnnotation(m_assembly.items().at(m_assembly.items().size()-1));
+	}
+
+	virtual void appendJumpInTo(LabelID _labelId, LabelID _retLabelId, int _stackDiffAfter) override
+    {
+        appendLabelReference(_labelId);
+        eth::AssemblyItem item(solidity::Instruction::JUMP);
+        item.setJumpType(eth::AssemblyItem::JumpType::IntoFunction);
+        m_assembly.append(item);
+        m_assembly.appendJumpTarget(_retLabelId);
+        m_assembly.adjustDeposit(_stackDiffAfter);
+    }
 	/// Append a label reference.
 	virtual void appendLabelReference(LabelID _labelId) override
 	{
