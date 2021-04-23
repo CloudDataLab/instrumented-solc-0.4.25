@@ -120,6 +120,7 @@ void CompilerContext::appendMissingLowLevelFunctions()
 
 		setStackOffset(inArgs + 1);
 		*this << m_lowLevelFunctions.at(name).tag();
+		m_asm->appendFunctionEntryAnnotation(m_lowLevelFunctions.at(name).tag());
 		generator(*this);
 		CompilerUtils(*this).moveToStackTop(outArgs);
 		appendJump(eth::AssemblyItem::JumpType::OutOfFunction);
